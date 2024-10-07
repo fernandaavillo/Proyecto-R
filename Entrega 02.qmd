@@ -1,0 +1,77 @@
+---
+title: "Entrega 02"
+author: "Fernanda Avillo"
+format: html
+editor: visual
+---
+
+Comentario inicial: Cambié la idea de valorizar derivados porque creo que esto me es más útil al mostrar a un cliente, tener una mejor visualización y forma de presentar proyectos de valorización de opciones.
+
+# Valoración de Opciones
+
+Este documento describe el modelo de Black-Scholes para valorar opciones de compra y venta europeas. La idea es generar un módulo donde el usuario inserte los valores de cada variable y poder ver los resultados en paralelo, con el fin de ver cómo se mueve el resultado de la valoración al cambiar ciertos parámetros.
+
+```{r}
+# Paquete necesario para cálculos estadísticos
+if (!requireNamespace("stats", quietly = TRUE)) {
+  install.packages("stats")
+}
+
+```
+
+# Función Black-Scholes para valuar opciones europeas
+
+A continuación se formula la función y el usuario podrá ingresar los valores de las variables y obtener el resultado.
+
+```{r}
+black_scholes <- function(S, K, r, sigma, T, tipo = "call") {
+  # S: Precio actual del activo subyacente
+  # K: Precio de ejercicio
+  # r: Tasa de interés libre de riesgo
+  # sigma: Volatilidad (desviación estándar del retorno del activo)
+  # T: Tiempo hasta el vencimiento en años
+  # tipo: "call" o "put"
+
+  d1 <- (log(S / K) + (r + (sigma^2) / 2) * T) / (sigma * sqrt(T))
+  d2 <- d1 - sigma * sqrt(T)
+
+  if (tipo == "call") {
+    # Fórmula para opción call
+    valor <- S * pnorm(d1) - K * exp(-r * T) * pnorm(d2)
+  } else if (tipo == "put") {
+    # Fórmula para opción put
+    valor <- K * exp(-r * T) * pnorm(-d2) - S * pnorm(-d1)
+  } else {
+    stop("El tipo debe ser 'call' o 'put'")
+  }
+
+  return(valor)
+}
+```
+
+# Función para solicitar los parámetros al usuario
+
+```{r}
+valorizar_opcion <- function() {
+  # Solicitar entradas al usuario
+  S <- as.numeric(readline(prompt = "Ingrese el precio del activo subyacente (S): "))
+  K <- as.numeric(readline(prompt = "Ingrese el precio de ejercicio (K): "))
+  r <- as.numeric(readline(prompt = "Ingrese la tasa libre de riesgo (r, en decimal, ej. 0.05 para 5%): "))
+  sigma <- as.numeric(readline(prompt = "Ingrese la volatilidad (sigma, en decimal, ej. 0.2 para 20%): "))
+  T <- as.numeric(readline(prompt = "Ingrese el tiempo hasta el vencimiento en años (T): "))
+  tipo <- readline(prompt = "Ingrese el tipo de opción ('call' o 'put'): ")
+
+  # Valuar la opción con los datos ingresados
+  resultado <- black_scholes(S, K, r, sigma, T, tipo)
+
+  # Mostrar el resultado
+  cat("El valor de la opción", tipo, "es:", round(resultado, 4), "\n")
+}
+```
+
+# Ejecutar la función para valorizar una opción
+
+```{r}
+
+
+```
