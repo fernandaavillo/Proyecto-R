@@ -1,0 +1,179 @@
+---
+title: "Entrega 03"
+format: html
+editor: Fernanda Avillo
+---
+
+## 1. Descripción de la solución
+
+El proyecto propone una herramienta de valorización de opciones de compra y venta europeas mediante el modelo Black-Scholes. La solución impacta directamente a clientes (pensando en consultoría financiera, al momento de presentar resultados) ya que permitiría una mejor visualización de los resultados y de cómo impacta cada variable en el resultado final. El problema, el desconocimiento del proceso/modelo por parte de los clientes, se solucionaría al presentar directamente las variables del modelo en un cuadrante de la hoja y en el otro cómo varía el resultado.
+
+Descripción de la solución: debe explicar qué soluciona, a quiénes impacta (clientes, usuarios, etc.), cómo espera solucionar el problema, periodicidad del desarrollo y alcance (qué considera y qué no considera)
+
+## 2. Planificación del trabajo
+
+Para desarrollar el modelo de valorización de opciones europeas utilizando el modelo de Black-Scholes, el proyecto se divide en etapas que abarcan desde la comprensión del problema hasta la implementación y prueba del modelo. La carta gantt con el esquema planificado se detalla a continuación:
+
+**Carta Gantt - Desarrollo del Modelo de Black-Scholes en R**
+
+| **Etapa** | **Tareas específicas** | **Duración estimada** |
+|----|----|----|
+| **1. Planificación del Proyecto** | Definir objetivos y alcance del modelo | 2 días |
+|  | Investigar sobre opciones europeas y Black-Scholes | 3 días |
+|  | Identificar variables necesarias (S, K, r, σ, T) | 1 día |
+| **2. Diseño del Modelo** | Especificar fórmulas del modelo Black-Scholes | 2 días |
+|  | Definir estructura del script en R | 1 día |
+|  | Preparar diagrama de flujo del modelo | 1 día |
+| **3. Preparación del Entorno en R** | Descargar bibliotecas necesarias (`quantmod`, `dplyr`, etc.) | 1 día |
+| **4. Implementación del Modelo** | Codificar la fórmula de Black-Scholes en R | 2 días |
+|  | Crear función en R para el cálculo del precio de la opción | 2 días |
+|  | Validar resultados con ejemplos teóricos | 2 días |
+| **5. Incorporación de Datos Reales** | Extraer datos históricos del activo subyacente | 3 días |
+|  | Calcular la volatilidad histórica del activo | 2 días |
+|  | Configurar tasas de interés actuales como input (usando datos de bancos centrales o bloomberg) | 1 día |
+| **6. Pruebas y Validación** | Verificar precisión del modelo con casos de prueba | 2 días |
+|  | Comparar resultados con el modelo existente interno (en la empresa) | 2 días |
+|  | Ajustar el modelo según errores encontrados | 2 días |
+| **7. Visualización de Resultados** | Crear gráficos (p.ej., sensibilidad del precio a la volatilidad) | 2 días |
+|  | Implementar análisis de sensibilidad en R | 2 días |
+| **8. Documentación y Presentación** | Documentar código y metodología | 2 días |
+|  | Preparar reporte final del modelo | 2 días |
+|  | Presentar resultados y modelo a partes interesadas (clientes) | 1 día |
+| **9. Mantenimiento y Mejora Continua** | Identificar mejoras futuras con el feedback de compañeros de trabajo | 1 día |
+|  | Planificar posibles integraciones (p.ej., dashboard en Shiny) | 1 día |
+
+------------------------------------------------------------------------
+
+## 3 y 4. MVP: Código desarrollado para la solución - Documentación
+
+```{r}
+# Verificar e instalar paquete necesario
+if (!requireNamespace("stats", quietly = TRUE)) {
+  install.packages("stats")
+}
+
+# Función de Black-Scholes para opciones europeas
+black_scholes <- function(S, K, r, sigma, T, tipo = "call") {
+  # S: Precio del activo subyacente
+  # K: Precio de ejercicio
+  # r: Tasa libre de riesgo
+  # sigma: Volatilidad del activo
+  # T: Tiempo hasta el vencimiento en años
+  # tipo: "call" o "put"
+  
+  d1 <- (log(S / K) + (r + (sigma^2) / 2) * T) / (sigma * sqrt(T))
+  d2 <- d1 - sigma * sqrt(T)
+
+  if (tipo == "call") {
+    # Fórmula para opción call
+    valor <- S * pnorm(d1) - K * exp(-r * T) * pnorm(d2)
+  } else if (tipo == "put") {
+    # Fórmula para opción put
+    valor <- K * exp(-r * T) * pnorm(-d2) - S * pnorm(-d1)
+  } else {
+    stop("El tipo debe ser 'call' o 'put'")
+  }
+
+  return(valor)
+}
+
+# Función para limpiar y validar entradas del usuario
+validar_entrada <- function(entrada) {
+  valor <- suppressWarnings(as.numeric(entrada))
+  if (is.na(valor)) {
+    stop("Entrada inválida. Asegúrese de ingresar un número válido.")
+  }
+  return(valor)
+}
+
+# Función principal para solicitar parámetros y valorizar opción
+valorizar_opcion <- function() {
+  cat("----- Valorización de Opción Europea (Modelo Black-Scholes) -----\n")
+
+  # Solicitar entradas y limpiarlas/transformarlas
+  S <- validar_entrada(readline("Ingrese el precio del activo subyacente (S): "))
+  K <- validar_entrada(readline("Ingrese el precio de ejercicio (K): "))
+  r <- validar_entrada(readline("Ingrese la tasa libre de riesgo (r, en decimal, ej. 0.05 para 5%): "))
+  sigma <- validar_entrada(readline("Ingrese la volatilidad (sigma, en decimal, ej. 0.2 para 20%): "))
+  T <- validar_entrada(readline("Ingrese el tiempo hasta el vencimiento en años (T): "))
+  tipo <- tolower(readline("Ingrese el tipo de opción ('call' o 'put'): "))
+
+  # Validar el tipo de opción
+  if (!(tipo %in% c("call", "put"))) {
+    stop("El tipo de opción debe ser 'call' o 'put'.")
+  }
+
+  # Calcular el valor de la opción
+  resultado <- black_scholes(S, K, r, sigma, T, tipo)
+
+  # Mostrar el resultado
+  cat("El valor de la opción", tipo, "es:", round(resultado, 4), "\n")
+}
+
+# Ejecutar la función principal
+valorizar_opcion()
+
+```
+
+Model Card: Black-Scholes Option Pricing Model Propósito: Valuar opciones europeas con el modelo de Black-Scholes basado en entradas del usuario.
+
+Entradas del Modelo: - `S`: Precio del activo subyacente (numérico). - `K`: Precio de ejercicio (numérico). - `r`: Tasa libre de riesgo (decimal). - `sigma`: Volatilidad del activo (decimal). - `T`: Tiempo hasta el vencimiento en años (numérico). - `tipo`: Tipo de opción ("call" o "put").
+
+Limpieza y Validación de Datos: - Las entradas se convierten a numéricas con `as.numeric()`. - Se valida que el tipo de opción sea 'call' o 'put'. - En caso de error, se lanza un mensaje con `stop()`.
+
+Función Principal `black_scholes()`: Calcula el precio de la opción usando las fórmulas específicas.
+
+Resultados: - Imprime en consola el precio de la opción con 4 decimales.
+
+Limitaciones - Solo aplica para opciones europeas. - Suponemos volatilidad constante y mercado sin fricciones.
+
+Próximos Pasos - Incluir análisis de sensibilidad para diferentes valores de `sigma` y `T`. - Conectar con fuentes de datos en tiempo real para inputs dinámicos.
+
+## 5. Despliegue
+
+Para llevar a producción la solución, se crea una interfaz gráfica utilizando Shiny para que el usuario ingrese los parámetros de forma más sencilla
+
+```{r}
+library(shiny)
+
+ui <- fluidPage(
+  titlePanel("Valorización de Opciones - Modelo Black-Scholes"),
+  sidebarLayout(
+    sidebarPanel(
+      numericInput("S", "Precio del activo subyacente (S):", value = 100),
+      numericInput("K", "Precio de ejercicio (K):", value = 105),
+      numericInput("r", "Tasa libre de riesgo (r):", value = 0.05),
+      numericInput("sigma", "Volatilidad (sigma):", value = 0.2),
+      numericInput("T", "Tiempo al vencimiento (T, años):", value = 1),
+      selectInput("tipo", "Tipo de opción:", choices = c("call", "put"))
+    ),
+    mainPanel(
+      textOutput("resultado")
+    )
+  )
+)
+
+server <- function(input, output) {
+  output$resultado <- renderText({
+    resultado <- black_scholes(input$S, input$K, input$r, input$sigma, input$T, input$tipo)
+    paste("El valor de la opción", input$tipo, "es:", round(resultado, 4))
+  })
+}
+
+shinyApp(ui = ui, server = server)
+
+```
+
+## Monitoreo
+
+Se realizará un monitoreo continuo para asegurar el funcionamiento del modelo, por ejemplo, creando alertas automáticas para detectar valores inusuales (como opciones con precios negativos) o inputs que no sean válidos.
+
+```{r}
+# código para crear la alerta 
+
+library(logger)
+
+log_appender(appender_file("logs/model_logs.log"))
+
+log_info("Calculando opción {tipo} con S={S}, K={K}, r={r}, sigma={sigma}, T={T}")
+```
